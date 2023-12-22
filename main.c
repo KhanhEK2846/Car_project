@@ -89,16 +89,16 @@ void motor_control(MotorState state, uint8_t speed)
 	switch(state)
 	{
 		case MOTOR_STOP:
-			HAL_GPIO_WritePin(R_PWM_IO_GPIO_Port, R_PWM_IO_Pin,GPIO_PIN_RESET);
+			pwm_set_duty(&htim1,TIM_CHANNEL_4,0);
 			pwm_set_duty(&htim1,TIM_CHANNEL_1,0);
 			break;
 		case MOTOR_CTRL_FORWARD:
-			HAL_GPIO_WritePin(R_PWM_IO_GPIO_Port, R_PWM_IO_Pin,GPIO_PIN_SET);
+			pwm_set_duty(&htim1,TIM_CHANNEL_4,0);
 			pwm_set_duty(&htim1,TIM_CHANNEL_1,speed);
 			break;
 		case MOTOR_CTRL_BACKWARD:
-			HAL_GPIO_WritePin(R_PWM_IO_GPIO_Port, R_PWM_IO_Pin,GPIO_PIN_RESET);
-			pwm_set_duty(&htim1,TIM_CHANNEL_1,100-speed);
+			pwm_set_duty(&htim1,TIM_CHANNEL_4,speed);
+			pwm_set_duty(&htim1,TIM_CHANNEL_1,0);
 			break;
 	}
 }
@@ -134,6 +134,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
@@ -141,7 +142,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  motor_control(MOTOR_CTRL_FORWARD, 20);
+	//HAL_Delay(1000);
+	motor_control(MOTOR_CTRL_FORWARD, 50);
+	//HAL_Delay(1000);
+	//motor_control(MOTOR_CTRL_BACKWARD, 10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -211,7 +215,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 72-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 1500-1;
+  htim1.Init.Period = 1000-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -242,6 +246,10 @@ static void MX_TIM1_Init(void)
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -282,22 +290,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, R_EN_Pin|L_EN_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(R_PWM_IO_GPIO_Port, R_PWM_IO_Pin, GPIO_PIN_RESET);
-
   /*Configure GPIO pins : R_EN_Pin L_EN_Pin */
   GPIO_InitStruct.Pin = R_EN_Pin|L_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : R_PWM_IO_Pin */
-  GPIO_InitStruct.Pin = R_PWM_IO_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(R_PWM_IO_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
