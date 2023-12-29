@@ -61,6 +61,8 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+
 void pwm_set_duty(TIM_HandleTypeDef *htim, uint16_t channel,uint8_t duty)
 {
 	uint16_t ccr = duty*(htim->Instance->ARR)/100;  //ratio division
@@ -93,12 +95,12 @@ void motor_control(MotorState state, uint8_t speed)
 			pwm_set_duty(&htim1,TIM_CHANNEL_1,0);
 			break;
 		case MOTOR_CTRL_FORWARD:
-			pwm_set_duty(&htim1,TIM_CHANNEL_4,0);
-			pwm_set_duty(&htim1,TIM_CHANNEL_1,speed);
-			break;
-		case MOTOR_CTRL_BACKWARD:
 			pwm_set_duty(&htim1,TIM_CHANNEL_4,speed);
 			pwm_set_duty(&htim1,TIM_CHANNEL_1,0);
+			break;
+		case MOTOR_CTRL_BACKWARD:
+			pwm_set_duty(&htim1,TIM_CHANNEL_4,0); //RPWM
+			pwm_set_duty(&htim1,TIM_CHANNEL_1,speed); //LPWM
 			break;
 	}
 }
@@ -142,10 +144,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	//HAL_Delay(1000);
-	motor_control(MOTOR_CTRL_FORWARD, 50);
-	//HAL_Delay(1000);
-	//motor_control(MOTOR_CTRL_BACKWARD, 10);
+	motor_control(MOTOR_CTRL_BACKWARD, 20);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
